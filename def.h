@@ -77,6 +77,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     int pos;                      //语法单位所在位置行号
     int offset;                    //偏移量
     int width;                    //占数据字节数
+    int num;    //here
     };
 
 struct symbol {  //这里只列出了一个符号表项的部分属性，没考虑属性间的互斥

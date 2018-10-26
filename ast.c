@@ -53,9 +53,9 @@ void display(struct node *T,int indent)  {//traverse the tree
                         display(T->ptr[0],indent+3);
                         break;
 	case COMP_STM:      printf("%*ccomposite sentence  :\n",indent,' ');
-                        printf("%*ccomposite sentence 的variaty define  :\n",indent+3,' ');
+                        printf("%*ccomposite sentence variaty define  :\n",indent+3,' ');
                         display(T->ptr[0],indent+6);      //display define part
-                        printf("%*ccomposite sentence 的 sentence part :\n",indent+3,' ');
+                        printf("%*ccomposite sentence sentence part :\n",indent+3,' ');
                         display(T->ptr[1],indent+6);      //display  sentence part
                         break;
 	case STM_LIST:      display(T->ptr[0],indent);      //display the first sentence 
@@ -73,7 +73,6 @@ void display(struct node *T,int indent)  {//traverse the tree
                         display(T->ptr[1],indent+6);      //display loop condition 
                         printf("%*cfor loop body  :\n",indent+3,' ');
                         display(T->ptr[2],indent+6);      //display loop body 
-                        break;
                         break;
 	case IF_THEN:       printf("%*ccondition  sentence (IF_THEN) :\n",indent,' ');
                         printf("%*ccondition  :\n",indent+3,' ');
