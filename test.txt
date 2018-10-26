@@ -1,0 +1,28 @@
+int func1(int arg1 , float arg2){
+  int arg3 ;
+  char a;
+  int a[];
+  arg3 = arg1 + arg2;
+  a = 's';
+  //...
+  /*
+  asd
+  sdf
+  fg*/
+  //a =1;
+  //a +=1.11;
+  a[1];
+  while(1){
+    a=1;
+  }
+  for ( a=1;a<1;a++){
+    a++;
+  }
+}
+
+int main(int arg)
+{
+  int a , b;
+  a++;
+  func1(a,b) ;
+}
