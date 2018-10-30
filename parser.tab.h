@@ -69,11 +69,12 @@
      WHILE = 285,
      FOR = 286,
      RETURN = 287,
-     MINUSASS = 288,
-     PLUSASS = 289,
-     SELF_PLUS = 290,
-     UMINUS = 291,
-     LOWER_THEN_ELSE = 292
+     BREAK = 288,
+     MINUSASS = 289,
+     PLUSASS = 290,
+     SELF_PLUS = 291,
+     UMINUS = 292,
+     LOWER_THEN_ELSE = 293
    };
 #endif
 
@@ -95,7 +96,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 99 "parser.tab.h"
+#line 100 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

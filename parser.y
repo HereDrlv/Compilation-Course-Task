@@ -31,7 +31,7 @@ void display(struct node *,int);
 
 
 %token LP RP LC RC LB RB SEMI COMMA   //用bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码
-%token SEFL_PLUS SELF_MINUS PLUS MINUS STAR DIV LINE_COMMENT ASSIGNOP AND OR NOT IF ELSE WHILE FOR RETURN
+%token SEFL_PLUS SELF_MINUS PLUS MINUS STAR DIV LINE_COMMENT ASSIGNOP AND OR NOT IF ELSE WHILE FOR RETURN BREAK
 
 %left ASSIGNOP PLUSASS MINUSASS
 %left OR
@@ -121,6 +121,7 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | INT           {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
       | FLOAT         {$$=mknode(FLOAT,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FLOAT;}
       | CHAR          {$$=mknode(CHAR,NULL,NULL,NULL,yylineno);$$->type_char=$1;$$->type=CHAR;}//here
+      | BREAK         {$$=mknode(BREAK,NULL,NULL,NULL,yylineno);}//here
       ;
 Args:    Exp COMMA Args    {$$=mknode(ARGS,$1,$3,NULL,yylineno);}
        | Exp               {$$=mknode(ARGS,$1,NULL,NULL,yylineno);}

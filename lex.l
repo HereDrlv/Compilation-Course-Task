@@ -26,11 +26,13 @@ char  '[A-Za-z]'
 {int}        {yylval.type_int=atoi(yytext); return INT;}
 {float}      {yylval.type_float=atof(yytext); return FLOAT;}
 {char}       {yylval.type_char=atof(yytext); return CHAR;}
+
 "int"        {strcpy(yylval.type_id,  yytext);return TYPE;}
 "float"      {strcpy(yylval.type_id,  yytext);return TYPE;}
 "char"       {strcpy(yylval.type_id,  yytext);return TYPE;}
 
 "return"     {return RETURN;}
+"break"			 {return BREAK;}
 "if"         {return IF;}
 "else"       {return ELSE;}
 "while"      {return WHILE;}

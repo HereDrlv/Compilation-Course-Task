@@ -93,7 +93,7 @@ void display(struct node *T,int indent)  {//traverse the tree
                         break;
     case VAR_DEF:       printf("%*cLOCAL VAR_NAME :\n",indent,' ');
                         display(T->ptr[0],indent+3);   //display variaty type
-                        display(T->ptr[1],indent+3);   //display thedefine 的 all variaty name 
+                        display(T->ptr[1],indent+3);   //display the define 的 all variaty name 
                         break;
     case DEC_LIST:      printf("%*cVAR_NAME :\n",indent,' ');
                         T0=T;

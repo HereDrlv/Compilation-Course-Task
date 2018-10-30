@@ -142,7 +142,7 @@ void prnIR(struct codenode *head){
 }
 void semantic_error(int line,char *msg1,char *msg2){
     //you can also collect error info ,and display them after all
-    printf("在%d行,%s %s\n",line,msg1,msg2);
+    printf("at line %d , %s %s\n",line,msg1,msg2);
 }
 void prn_symbol(){ //显示符号表
     int i=0;
@@ -162,12 +162,12 @@ int searchSymbolTable(char *name) {
 }
 
 int fillSymbolTable(char *name,char *alias,int level,int type,char flag,int offset) {
-    //首先根据name查符号表, 不能重复定义 重复定义return -1
+    //首先根据name查符号表, 不能redefined  redefined return -1
     int i;
-    /*符号查重, 考虑外部变量声明前有function 定义, 
-    其formal para 名还在符号表中, 这时的外部变量与前function 的formal para 重名是允许的*/
+    /*符号查重, 考虑外部variety 声明前有function 定义, 
+    其formal para name 还在符号表中, 这时的外部variety 与前function 的formal para 重name 是允许的*/
     for(i=symbolTable.index-1;symbolTable.symbols[i].level==level||(level==0 && i>=0);i--) {
-        if (level==0 && symbolTable.symbols[i].level==1) continue;  //外部变量和formal para 不必比较重名
+        if (level==0 && symbolTable.symbols[i].level==1) continue;  //外部variety 和formal para 不必比较重name 
         if (!strcmp(symbolTable.symbols[i].name, name))  return -1;
         }
     //填写符号表内容
@@ -177,10 +177,10 @@ int fillSymbolTable(char *name,char *alias,int level,int type,char flag,int offs
     symbolTable.symbols[symbolTable.index].type=type;
     symbolTable.symbols[symbolTable.index].flag=flag;
     symbolTable.symbols[symbolTable.index].offset=offset;
-    return symbolTable.index++; //return 的是符号在符号表中的位置序号, intermediate code generate 时可用序号取到符号别名
+    return symbolTable.index++; //return 的是符号在符号表中的位置序号, intermediate code generate 时可用序号取到符号别name 
 }
 
-//填写临时变量到符号表, return 临时变量在符号表中的位置
+//填写临时variety 到符号表, return 临时variety 在符号表中的位置
 int fill_Temp(char *name,int level,int type,char flag,int offset) {
     strcpy(symbolTable.symbols[symbolTable.index].name,"");
     strcpy(symbolTable.symbols[symbolTable.index].alias,name);
@@ -188,7 +188,7 @@ int fill_Temp(char *name,int level,int type,char flag,int offset) {
     symbolTable.symbols[symbolTable.index].type=type;
     symbolTable.symbols[symbolTable.index].flag=flag;
     symbolTable.symbols[symbolTable.index].offset=offset;
-    return symbolTable.index++; //return 的是临时变量在符号表中的位置序号
+    return symbolTable.index++; //return 的是临时variety 在符号表中的位置序号
 }
 
 
@@ -196,23 +196,23 @@ int fill_Temp(char *name,int level,int type,char flag,int offset) {
 int LEV=0;      //层号
 int func_size;  //1个function 的活动记录大小
 
-void ext_var_list(struct node *T){  //处理变量列表
+void ext_var_list(struct node *T){  //处理variety 列表
     int rtn,num=1;
     switch (T->kind){
         case EXT_DEC_LIST:
-                T->ptr[0]->type=T->type;              //将type 属性向下传递变量node 
-                T->ptr[0]->offset=T->offset;          //外部变量的偏移量向下传递
-                T->ptr[1]->type=T->type;              //将type 属性向下传递变量node 
-                T->ptr[1]->offset=T->offset+T->width; //外部变量的偏移量向下传递
+                T->ptr[0]->type=T->type;              //将type 属性向下传递variety node 
+                T->ptr[0]->offset=T->offset;          //外部variety 的偏移量向下传递
+                T->ptr[1]->type=T->type;              //将type 属性向下传递variety node 
+                T->ptr[1]->offset=T->offset+T->width; //外部variety 的偏移量向下传递
                 T->ptr[1]->width=T->width;
                 ext_var_list(T->ptr[0]);
                 ext_var_list(T->ptr[1]);
                 T->num=T->ptr[1]->num+1;
                 break;
         case ID:
-            rtn=fillSymbolTable(T->type_id,newAlias(),LEV,T->type,'V',T->offset);  //最后一个变量名
+            rtn=fillSymbolTable(T->type_id,newAlias(),LEV,T->type,'V',T->offset);  //最后一个variety name 
             if (rtn==-1)
-                semantic_error(T->pos,T->type_id, "变量重复定义");
+                semantic_error(T->pos,T->type_id, "··variety redefine");
             else T->place=rtn;
             T->num=1;
             break;
@@ -263,9 +263,9 @@ void boolExp(struct node *T){  //bool exp , 参考文献[2]p84的思想
         case ID:    //查符号表, 获得符号表中的位置, type 送type
                    rtn=searchSymbolTable(T->type_id);
                    if (rtn==-1)
-                        semantic_error(T->pos,T->type_id, "变量未定义");
+                        semantic_error(T->pos,T->type_id, "variety undefined ");
                    if (symbolTable.symbols[rtn].flag=='F')
-                        semantic_error(T->pos,T->type_id, "是function 名, type unmatch");
+                        semantic_error(T->pos,T->type_id, "is function name , type unmatch");
                    else {
                         opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[rtn].alias);
                         opn1.offset=symbolTable.symbols[rtn].offset;
@@ -345,18 +345,18 @@ void Exp(struct node *T)
 	case ID:    //查符号表, 获得符号表中的位置, type 送type
                 rtn=searchSymbolTable(T->type_id);
                 if (rtn==-1)
-                    semantic_error(T->pos,T->type_id, "变量未定义");
+                    semantic_error(T->pos,T->type_id, "variety undefined ");
                 if (symbolTable.symbols[rtn].flag=='F')
-                    semantic_error(T->pos,T->type_id, "是function 名, type unmatch");
+                    semantic_error(T->pos,T->type_id, "is function name , type unmatch");
                 else {
-                    T->place=rtn;       //node 保存变量在符号表中的位置
+                    T->place=rtn;       //node 保存variety 在符号表中的位置
                     T->code=NULL;       //标识符不需要generate TAC
                     T->type=symbolTable.symbols[rtn].type;
                     T->offset=symbolTable.symbols[rtn].offset;
                     T->width=0;   //未再使用新单元
                     }
                 break;
-    case INT:   T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset); //为整常量generate 一个临时变量
+    case INT:   T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset); //为整常量generate 一个临时variety 
                 T->type=INT;
                 opn1.kind=INT;opn1.const_int=T->type_int;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
@@ -364,7 +364,7 @@ void Exp(struct node *T)
                 T->code=genIR(ASSIGNOP,opn1,opn2,result);
                 T->width=4;
                 break;
-    case FLOAT: T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset);   //为浮点常量generate 一个临时变量
+    case FLOAT: T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset);   //为浮点常量generate 一个临时variety 
                 T->type=FLOAT;
                 opn1.kind=FLOAT; opn1.const_float=T->type_float;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
@@ -374,16 +374,26 @@ void Exp(struct node *T)
                 break;
 	case ASSIGNOP:
                 if (T->ptr[0]->kind!=ID){
-                    semantic_error(T->pos,"", "赋值sentence 需要左值");
+                    semantic_error(T->pos,"", "assigning sentence needs left-value");
                     }
                 else {
-                    Exp(T->ptr[0]);   //处理左值, 例中仅为变量
+                    Exp(T->ptr[0]);   //处理左值, 例中仅为variety 
                     T->ptr[1]->offset=T->offset;
                     Exp(T->ptr[1]);
                     T->type=T->ptr[0]->type;
+                    // here.赋值语句类型不匹配。
+                    // T->ptr[0]//左值
+                    // T->ptr[1]//右值
+                    rtn=searchSymbolTable(T->ptr[0]->type_id);
+                    if ( symbolTable.symbols[rtn].type != T->ptr[1]->type){
+                        semantic_error(T->pos,"", "assigning sentence type unmatch");
+                        printf("%d  ",symbolTable.symbols[rtn].type);
+                        printf("%d  ",T->ptr[1]->type);
+                    }
+
                     T->width=T->ptr[1]->width;
                     T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
-                    opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个变量或临时变量
+                    opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
                     opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
                     result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                     result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
@@ -427,11 +437,11 @@ void Exp(struct node *T)
     case FUNC_CALL: //根据T->type_id查出function 的定义, 如果语言中增加了实验教材的read, write需要单独处理一下
                 rtn=searchSymbolTable(T->type_id);
                 if (rtn==-1){
-                    semantic_error(T->pos,T->type_id, "function 未定义");
+                    semantic_error(T->pos,T->type_id, "function undefined ");
                     break;
                     }
                 if (symbolTable.symbols[rtn].flag!='F'){
-                    semantic_error(T->pos,T->type_id, "不是一个function ");
+                    semantic_error(T->pos,T->type_id, "is not a function ");
                      break;
                     }
                 T->type=symbolTable.symbols[rtn].type;
@@ -439,7 +449,7 @@ void Exp(struct node *T)
                 if (T->ptr[0]){
                     T->ptr[0]->offset=T->offset;
                     Exp(T->ptr[0]);       //处理所有actual para exp 求值, 及type 
-                    T->width=T->ptr[0]->width+width; //累加上计算actual para 使用临时变量的单元数
+                    T->width=T->ptr[0]->width+width; //累加上计算actual para 使用临时variety 的单元数
                     T->code=T->ptr[0]->code;
                     }
                 else {T->width=width; T->code=NULL;}
@@ -453,7 +463,7 @@ void Exp(struct node *T)
                     T0=T0->ptr[1];
                     }
                 T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->width-width);
-                opn1.kind=ID;     strcpy(opn1.id,T->type_id);  //保存function 名
+                opn1.kind=ID;     strcpy(opn1.id,T->type_id);  //保存function name 
                 opn1.offset=rtn;  //这里offset用以保存function 定义入口,在目标 code generate 时, 能获取相应信息
                 result.kind=ID;   strcpy(result.id,symbolTable.symbols[T->place].alias);
                 result.offset=symbolTable.symbols[T->place].offset;
@@ -496,18 +506,18 @@ void semantic_Analysis(struct node *T)
             break;
 	case EXT_VAR_DEF:   //处理外部说明,将第一个孩子(TYPEnode )中的type 送到第二个孩子的type 域
             T->type=T->ptr[1]->type=!strcmp(T->ptr[0]->type_id,"int")?INT:FLOAT;
-            T->ptr[1]->offset=T->offset;        //这个外部变量的偏移量向下传递
-            T->ptr[1]->width=T->type==INT?4:8;  //将一个变量的宽度向下传递
-            ext_var_list(T->ptr[1]);            //处理外部变量说明中的标识符序列
-            T->width=(T->type==INT?4:8)* T->ptr[1]->num; //计算这个外部变量说明的宽度
-            T->code=NULL;             //这里假定外部变量不支持初始化
+            T->ptr[1]->offset=T->offset;        //这个外部variety 的偏移量向下传递
+            T->ptr[1]->width=T->type==INT?4:8;  //将一个variety 的宽度向下传递
+            ext_var_list(T->ptr[1]);            //处理外部variety 说明中的标识符序列
+            T->width=(T->type==INT?4:8)* T->ptr[1]->num; //计算这个外部variety 说明的宽度
+            T->code=NULL;             //这里假定外部variety 不支持初始化
             break;
 	case FUNC_DEF:      //填写function 定义信息到符号表
-            T->ptr[1]->type=!strcmp(T->ptr[0]->type_id,"int")?INT:FLOAT;//获取function return type 送到含function 名、 para 的node 
-            T->width=0;     //function 的宽度设置为0, 不会对外部变量的地址分配产生影响
-            T->offset=DX;   //设置局部变量在活动记录中的偏移量初值
-            semantic_Analysis(T->ptr[1]); //处理function 名和 para node 部分, 这里不考虑用寄存器传递 para 
-            T->offset+=T->ptr[1]->width;   //用formal para 单元宽度修改function 局部变量的起始偏移量
+            T->ptr[1]->type=!strcmp(T->ptr[0]->type_id,"int")?INT:FLOAT;//获取function return type 送到含function name 、 para 的node 
+            T->width=0;     //function 的宽度设置为0, 不会对外部variety 的地址分配产生影响
+            T->offset=DX;   //设置局部variety 在活动记录中的偏移量初值
+            semantic_Analysis(T->ptr[1]); //处理function name 和 para node 部分, 这里不考虑用寄存器传递 para 
+            T->offset+=T->ptr[1]->width;   //用formal para 单元宽度修改function 局部variety 的起始偏移量
             T->ptr[2]->offset=T->offset;
             strcpy(T->ptr[2]->Snext,newLabel());  //function 体sentence 执行结束后的位置属性
             semantic_Analysis(T->ptr[2]);         //处理function 体node 
@@ -515,23 +525,23 @@ void semantic_Analysis(struct node *T)
             symbolTable.symbols[T->ptr[1]->place].offset=T->offset+T->ptr[2]->width;
             T->code=merge(3,T->ptr[1]->code,T->ptr[2]->code,genLabel(T->ptr[2]->Snext));          //function 体的 code 作为function 的 code 
             break;
-	case FUNC_DEC:      //根据return type , function 名填写符号表
+	case FUNC_DEC:      //根据return type , function name 填写符号表
             rtn=fillSymbolTable(T->type_id,newAlias(),LEV,T->type,'F',0);//function 不在数据区中分配单元, 偏移量为0
             if (rtn==-1){
-                semantic_error(T->pos,T->type_id, "function 重复定义");
+                semantic_error(T->pos,T->type_id, "function redefined ");
                 break;
                 }
             else T->place=rtn;
             result.kind=ID;   strcpy(result.id,T->type_id);
             result.offset=rtn;
-            T->code=genIR(FUNCTION,opn1,opn2,result);     //generate intermediate code ：FUNCTION function 名
+            T->code=genIR(FUNCTION,opn1,opn2,result);     //generate intermediate code ：FUNCTION function name 
             T->offset=DX;   //设置形式 para 在活动记录中的偏移量初值
             if (T->ptr[0]) { //判断是否有 para 
                 T->ptr[0]->offset=T->offset;
                 semantic_Analysis(T->ptr[0]);  //处理function  para 列表
                 T->width=T->ptr[0]->width;
                 symbolTable.symbols[rtn].paramnum=T->ptr[0]->num;
-                T->code=merge(2,T->code,T->ptr[0]->code);  //连接function 名和 para  code 序列
+                T->code=merge(2,T->code,T->ptr[0]->code);  //连接function name 和 para  code 序列
                 }
             else symbolTable.symbols[rtn].paramnum=0,T->width=0;
             break;
@@ -554,23 +564,23 @@ void semantic_Analysis(struct node *T)
 	case  PARAM_DEC:
             rtn=fillSymbolTable(T->ptr[1]->type_id,newAlias(),1,T->ptr[0]->type,'P',T->offset);
             if (rtn==-1)
-                semantic_error(T->ptr[1]->pos,T->ptr[1]->type_id, " para 名重复定义");
+                semantic_error(T->ptr[1]->pos,T->ptr[1]->type_id, " para name redefined ");
             else T->ptr[1]->place=rtn;
             T->num=1;       // para 个数计算的初始值
             T->width=T->ptr[0]->type==INT?4:8;  // para 宽度
             result.kind=ID;   strcpy(result.id, symbolTable.symbols[rtn].alias);
             result.offset=T->offset;
-            T->code=genIR(PARAM,opn1,opn2,result);     //generate ：FUNCTION function 名
+            T->code=genIR(PARAM,opn1,opn2,result);     //generate ：FUNCTION function name 
             break;
 	case COMP_STM:
             LEV++;
-            //设置层号加1, 并且保存该层局部变量在符号表中的起始位置在symbol_scope_TX
+            //设置层号加1, 并且保存该层局部variety 在符号表中的起始位置在symbol_scope_TX
             symbol_scope_TX.TX[symbol_scope_TX.top++]=symbolTable.index;
             T->width=0;
             T->code=NULL;
             if (T->ptr[0]) {
                 T->ptr[0]->offset=T->offset;
-                semantic_Analysis(T->ptr[0]);  //处理该层的局部变量DEF_LIST
+                semantic_Analysis(T->ptr[0]);  //处理该层的局部variety DEF_LIST
                 T->width+=T->ptr[0]->width;
                 T->code=T->ptr[0]->code;
                 }
@@ -589,26 +599,26 @@ void semantic_Analysis(struct node *T)
             T->code=NULL;
             if (T->ptr[0]){
                 T->ptr[0]->offset=T->offset;
-                semantic_Analysis(T->ptr[0]);   //处理一个局部变量定义
+                semantic_Analysis(T->ptr[0]);   //处理一个局部variety 定义
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
                 }
             if (T->ptr[1]) {
                 T->ptr[1]->offset=T->offset+T->ptr[0]->width;
-                semantic_Analysis(T->ptr[1]);   //处理剩下的局部变量定义
+                semantic_Analysis(T->ptr[1]);   //处理剩下的局部variety 定义
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 T->width+=T->ptr[1]->width;
                 }
                 break;
-    case VAR_DEF://处理一个局部变量定义,将第一个孩子(TYPEnode )中的type 送到第二个孩子的type 域
-                 //类似于上面的外部变量EXT_VAR_DEF, 换了一种处理方法
+    case VAR_DEF://处理一个局部variety 定义,将第一个孩子(TYPEnode )中的type 送到第二个孩子的type 域
+                 //类似于上面的外部variety EXT_VAR_DEF, 换了一种处理方法
                 T->code=NULL;
-                T->ptr[1]->type=!strcmp(T->ptr[0]->type_id,"int")?INT:FLOAT;  //确定变量序列各变量type 
-                T0=T->ptr[1]; //T0为变量名列表子树根指针, 对ID、ASSIGNOP类node 在登记到符号表, 作为局部变量
+                T->ptr[1]->type=!strcmp(T->ptr[0]->type_id,"int")?INT:FLOAT;  //确定variety 序列各variety type 
+                T0=T->ptr[1]; //T0为variety name 列表子树根指针, 对ID、ASSIGNOP类node 在登记到符号表, 作为局部variety 
                 num=0;
                 T0->offset=T->offset;
                 T->width=0;
-                width=T->ptr[1]->type==INT?4:8;  //一个变量宽度
+                width=T->ptr[1]->type==INT?4:8;  //一个variety 宽度
                 while (T0) {  //处理所以DEC_LISTnode 
                     num++;
                     T0->ptr[0]->type=T0->type;  //type 属性向下传递
@@ -618,14 +628,14 @@ void semantic_Analysis(struct node *T)
                     if (T0->ptr[0]->kind==ID){
                         rtn=fillSymbolTable(T0->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width);//此处偏移量未计算, 暂时为0
                         if (rtn==-1)
-                            semantic_error(T0->ptr[0]->pos,T0->ptr[0]->type_id, "变量重复定义");
+                            semantic_error(T0->ptr[0]->pos,T0->ptr[0]->type_id, "variety redefined ");
                         else T0->ptr[0]->place=rtn;
                         T->width+=width;
                         }
                     else if (T0->ptr[0]->kind==ASSIGNOP){
                             rtn=fillSymbolTable(T0->ptr[0]->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width);//此处偏移量未计算, 暂时为0
                             if (rtn==-1)
-                                semantic_error(T0->ptr[0]->ptr[0]->pos,T0->ptr[0]->ptr[0]->type_id, "变量重复定义");
+                                semantic_error(T0->ptr[0]->ptr[0]->pos,T0->ptr[0]->ptr[0]->type_id, "variety redefined ");
                             else {
                                 T0->ptr[0]->place=rtn;
                                 T0->ptr[0]->ptr[1]->offset=T->offset+T->width+width;
@@ -712,7 +722,7 @@ void semantic_Analysis(struct node *T)
                     num=symbolTable.index;
                     do num--; while (symbolTable.symbols[num].flag!='F');
                     if (T->ptr[0]->type!=symbolTable.symbols[num].type) {
-                        semantic_error(T->pos, "return 值type 错误","");
+                        semantic_error(T->pos, "return value type error","");
                         T->width=0;T->code=NULL;
                         break;
                         }
@@ -754,9 +764,9 @@ void semantic_Analysis0(struct node *T) {
     fillSymbolTable("x","",1,INT,'P',12);
     fillSymbolTable("write","",0,INT,'F',4);
     symbolTable.symbols[2].paramnum=1;
-    symbol_scope_TX.TX[0]=0;  //外部变量在符号表中的起始序号为0
+    symbol_scope_TX.TX[0]=0;  //外部variety 在符号表中的起始序号为0
     symbol_scope_TX.top=1;
-    T->offset=0;              //外部变量在数据区的偏移量
+    T->offset=0;              //外部variety 在数据区的偏移量
     semantic_Analysis(T);
     // objectCode(T->code);
  }
