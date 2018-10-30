@@ -1,5 +1,6 @@
 
 #include "def.h"
+#include "objectCode.c"
 
 char *strcat0(char *s1,char *s2) {
     static char result[10];
@@ -768,5 +769,5 @@ void semantic_Analysis0(struct node *T) {
     symbol_scope_TX.top=1;
     T->offset=0;              //外部variety 在数据区的偏移量
     semantic_Analysis(T);
-    // objectCode(T->code);
+    objectCode(T->code);
  }
