@@ -7,12 +7,12 @@ int fibo(int a)
 }
 int main() 
 {
-  // int m[];
   int m,n,i;
   int j =1;
   m = read();
-  // i = 1;
-  i++;
+  i = 1;
+  // (i+i)++;
+  // 1++;
   // i+=12;
   // m+=2;
   while(i<=m)

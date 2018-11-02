@@ -406,6 +406,9 @@ void Exp(struct node *T)
                     T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
                     }
                 break;
+    case SELFPLUS://TODO 实验三。填表填code时用
+                printf("exome?exome?exome?exome?exome?exome?exome?exome?");
+                break;
     case PLUSASS:
                 if (T->ptr[0]->kind!=ID){
                     semantic_error(T->pos,"", "plus-assigning sentence needs left-value");
@@ -416,15 +419,8 @@ void Exp(struct node *T)
                     Exp(T->ptr[1]);
                     T->type=T->ptr[0]->type;
 
-                    //TODO 复合赋值的中间代码生成：
-                    // 下面希望递归到展开成普通赋值语句的形式。（为什么不在AST上就展开?是为了保持原有语法树结构
-                    // struct node *Tnew1 = mknode(PLUS,T->ptr[0],T->ptr[1],NULL,yylineno);strcpy(T->type_id,"PLUS");
-                    // struct node *Tnew2 = mknode(ASSIGNOP,Tnew1,T->ptr[0],NULL,yylineno);strcpy(T->type_id,"ASSIGNOP");
-                    //emm 展开好像有点困难，要新建节点。
-
-
                     //直接生成代码试试。也许只要改下面与code有关的语句就行了
-                    // T->width=T->ptr[1]->width;//width我实在不知道怎么改了，可能影响实验四
+                    T->width=T->ptr[1]->width;//width我实在不知道怎么改了，可能影响实验四
                     // 与code有关的语句1:
                     T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
                     // 下面全都是准备好op1 result 填代码
@@ -453,22 +449,7 @@ void Exp(struct node *T)
                 Exp(T->ptr[0]);
                 Exp(T->ptr[1]);
                 break;
-	case SELFPLUS:
-                printf("here I come！！！！！！！！！");
-                //未进入上面这里。
-                //语法分析是正确的。成功生成了node吗？
-                // Ttemp = T;
-                // while(Ttemp->ptr[0]){
-                //     if( ! Ttemp->ptr[1] ){//若有两个子树，则为非法
-                //         semantic_error(T->pos,"", "this exp can't self plus ");
-                //     }
-                //     Ttemp = Ttemp->ptr[0];
-                // } 
-                // if(Ttemp->type == INT || Ttemp->type == CHAR || Ttemp->type == FLOAT || Ttemp->type == BREAK ){
-                // //若为INT CHAR FLOAT BREAK，则非法 
-                //         semantic_error(T->pos,"", "this exp can't self plus ");
-                // }
-                break;
+
     //下面几个共用
     case PLUS:
 	case MINUS:
@@ -780,6 +761,18 @@ void semantic_Analysis(struct node *T)
                 T->width=T->ptr[0]->width;
                 break;
     case BREAK: //here 
+                // printf("here!!!!!!!!!!");
+                break;
+	case SELFPLUS:
+                //here SELFPLUS实验三静态语义检测
+                if( ! T->ptr[1] ){//若有两个子树，则为非法
+                    semantic_error(T->pos,"", "this exp can't self plus ");
+                    break;
+                }
+                if(T->type == INT || T->type == CHAR || T->type == FLOAT || T->type == BREAK ){
+                //若为INT CHAR FLOAT BREAK，则非法 
+                        semantic_error(T->pos,"", "this exp can't self plus ");
+                }
                 break;
 
 

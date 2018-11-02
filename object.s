@@ -95,6 +95,11 @@ main:
   lw $t1, 32($sp)
   move $t3, $t1
   sw $t3, 12($sp)
+  li $t3, 1
+  sw $t3, 32($sp)
+  lw $t1, 32($sp)
+  move $t3, $t1
+  sw $t3, 20($sp)
 label10:
   lw $t1, 20($sp)
   lw $t2, 12($sp)
