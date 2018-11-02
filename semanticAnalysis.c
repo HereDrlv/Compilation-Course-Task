@@ -1,6 +1,7 @@
 
 #include "def.h"
 #include "objectCode.c"
+extern int yylineno;
 
 char *strcat0(char *s1,char *s2) {
     static char result[10];
@@ -102,6 +103,11 @@ void prnIR(struct codenode *head){
         switch (h->op) {
             case ASSIGNOP:  printf("  %s := %s\n",resultstr,opnstr1);
                             break;
+            case PLUSASS:  printf("  %s := %s + %s\n",resultstr,resultstr,opnstr2);//here 复合赋值的中间代码
+                            break;                            
+            case SELFPLUS: printf("  %s := %s + %s\n",resultstr,resultstr,opnstr1);
+                            break;//TODO这个不行因为看到源代码写 i=i+1；和这个是不等价的
+                            //最好是生成中间代码的时候就转换成普通赋值表达式。
             case PLUS:
             case MINUS:
             case STAR:
@@ -221,12 +227,12 @@ void ext_var_list(struct node *T){  //处理variety 列表
     }
 
 int  match_param(int i,struct node *T){
-    int j,num=symbolTable.symbols[i].paramnum;
+    int j,num=symbolTable.symbols[i].paramnum;//
     int type1,type2;
     if (num==0 && T==NULL) return 1;
     for (j=1;j<num;j++) {
         if (!T){
-            semantic_error(T->pos,"", "function call para too few");
+            semantic_error(T->pos,"", "function call para too few");//TODO
             return 0;
             }
         type1=symbolTable.symbols[i+j].type;  //formal para type 
@@ -338,7 +344,7 @@ void boolExp(struct node *T){  //bool exp , 参考文献[2]p84的思想
 void Exp(struct node *T)
 {//处理基本exp , 参考文献[2]p82的思想
   int rtn,num,width;
-  struct node *T0;
+  struct node *T0,*Ttemp;
   struct opn opn1,opn2,result;
   if (T)
 	{
@@ -383,8 +389,6 @@ void Exp(struct node *T)
                     Exp(T->ptr[1]);
                     T->type=T->ptr[0]->type;
                     // here.赋值语句类型不匹配。
-                    // T->ptr[0]//左值
-                    // T->ptr[1]//右值
                     rtn=searchSymbolTable(T->ptr[0]->type_id);
                     if ( symbolTable.symbols[rtn].type != T->ptr[1]->type){
                         semantic_error(T->pos,"", "assigning sentence type unmatch");
@@ -392,6 +396,7 @@ void Exp(struct node *T)
                         printf("%d  ",T->ptr[1]->type);
                     }
 
+                    // 这里是填符号表和中间代码：
                     T->width=T->ptr[1]->width;
                     T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
                     opn1.kind=ID;   strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
@@ -401,6 +406,45 @@ void Exp(struct node *T)
                     T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
                     }
                 break;
+    case PLUSASS:
+                if (T->ptr[0]->kind!=ID){
+                    semantic_error(T->pos,"", "plus-assigning sentence needs left-value");
+                    }//here 复合赋值语句左值检测
+                else {
+                    Exp(T->ptr[0]);   //处理左值, 例中仅为variety 
+                    T->ptr[1]->offset=T->offset;
+                    Exp(T->ptr[1]);
+                    T->type=T->ptr[0]->type;
+
+                    //TODO 复合赋值的中间代码生成：
+                    // 下面希望递归到展开成普通赋值语句的形式。（为什么不在AST上就展开?是为了保持原有语法树结构
+                    // struct node *Tnew1 = mknode(PLUS,T->ptr[0],T->ptr[1],NULL,yylineno);strcpy(T->type_id,"PLUS");
+                    // struct node *Tnew2 = mknode(ASSIGNOP,Tnew1,T->ptr[0],NULL,yylineno);strcpy(T->type_id,"ASSIGNOP");
+                    //emm 展开好像有点困难，要新建节点。
+
+
+                    //直接生成代码试试。也许只要改下面与code有关的语句就行了
+                    // T->width=T->ptr[1]->width;//width我实在不知道怎么改了，可能影响实验四
+                    // 与code有关的语句1:
+                    T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
+                    // 下面全都是准备好op1 result 填代码
+                    opn1.kind=ID;   
+                    strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
+                    opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+                    opn2.kind=ID;   
+                    strcpy(opn2.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
+                    opn2.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+
+                    result.kind=ID; 
+                    strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                    result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                    T->code=merge(2,T->code,genIR(PLUSASS,opn1,opn2,result));
+
+
+                    
+                    }
+                break;
+    
 	case AND:   //按算术exp 方式计算bool 值, 未写完
 	case OR:    //按算术exp 方式计算bool 值, 未写完
 	case RELOP: //按算术exp 方式计算bool 值, 未写完
@@ -409,7 +453,24 @@ void Exp(struct node *T)
                 Exp(T->ptr[0]);
                 Exp(T->ptr[1]);
                 break;
-	case PLUS:
+	case SELFPLUS:
+                printf("here I come！！！！！！！！！");
+                //未进入上面这里。
+                //语法分析是正确的。成功生成了node吗？
+                // Ttemp = T;
+                // while(Ttemp->ptr[0]){
+                //     if( ! Ttemp->ptr[1] ){//若有两个子树，则为非法
+                //         semantic_error(T->pos,"", "this exp can't self plus ");
+                //     }
+                //     Ttemp = Ttemp->ptr[0];
+                // } 
+                // if(Ttemp->type == INT || Ttemp->type == CHAR || Ttemp->type == FLOAT || Ttemp->type == BREAK ){
+                // //若为INT CHAR FLOAT BREAK，则非法 
+                //         semantic_error(T->pos,"", "this exp can't self plus ");
+                // }
+                break;
+    //下面几个共用
+    case PLUS:
 	case MINUS:
 	case STAR:
 	case DIV:   T->ptr[0]->offset=T->offset;
@@ -592,6 +653,7 @@ void semantic_Analysis(struct node *T)
                 T->width+=T->ptr[1]->width;
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 }
+            // 实验二已完成，暂时不显示。    
              prn_symbol();       //c在退出一个符合sentence 前显示的符号表
              LEV--;    //出复合sentence , 层号减1
              symbolTable.index=symbol_scope_TX.TX[--symbol_scope_TX.top]; //删除该作用域中的符号
@@ -717,6 +779,10 @@ void semantic_Analysis(struct node *T)
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
                 break;
+    case BREAK: //here 
+                break;
+
+
 	case RETURN:if (T->ptr[0]){
                     T->ptr[0]->offset=T->offset;
                     Exp(T->ptr[0]);
@@ -742,6 +808,7 @@ void semantic_Analysis(struct node *T)
     case INT:
     case FLOAT:
 	case ASSIGNOP:
+    case PLUSASS:
 	case AND:
 	case OR:
 	case RELOP:
@@ -769,5 +836,9 @@ void semantic_Analysis0(struct node *T) {
     symbol_scope_TX.top=1;
     T->offset=0;              //外部variety 在数据区的偏移量
     semantic_Analysis(T);
+    if(T->breakFlag){
+        printf("break not wrapped error ");//here  
+    }
+    prnIR(T->code);//实验三。
     objectCode(T->code);
  }

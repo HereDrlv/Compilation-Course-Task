@@ -10,6 +10,7 @@ extern char *yytext;
 extern FILE *yyin;
 void yyerror(const char* fmt, ...);
 void display(struct node *,int);
+// void fillBreakCapable(struct node *T);
 %}
 
 %union {
@@ -31,13 +32,13 @@ void display(struct node *,int);
 
 
 %token LP RP LC RC LB RB SEMI COMMA   //用bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码
-%token SEFL_PLUS SELF_MINUS PLUS MINUS STAR DIV LINE_COMMENT ASSIGNOP AND OR NOT IF ELSE WHILE FOR RETURN BREAK
+%token PLUS MINUS STAR DIV LINE_COMMENT ASSIGNOP AND OR NOT SELFPLUS SELF_MINUS  IF ELSE WHILE FOR RETURN BREAK
 
 %left ASSIGNOP PLUSASS MINUSASS
 %left OR
 %left AND
 %left RELOP
-%left SELF_PLUS SELF_MINUS PLUS MINUS
+%left PLUS MINUS SELFPLUS SELF_MINUS
 %left STAR DIV
 %left LINE_COMMENT
 %right UMINUS NOT
@@ -83,10 +84,11 @@ StmList: {$$=NULL; }
 Stmt:   Exp SEMI    {$$=mknode(EXP_STMT,$1,NULL,NULL,yylineno);}
       | CompSt      {$$=$1;}      //复合语句结点直接最为语句结点，不再生成新的结点
       | RETURN Exp SEMI   {$$=mknode(RETURN,$2,NULL,NULL,yylineno);}
+      | BREAK SEMI     {$$=mknode(BREAK,NULL,NULL,NULL,yylineno);$$->breakFlag=1;}//here
       | IF LP Exp RP Stmt %prec LOWER_THEN_ELSE   {$$=mknode(IF_THEN,$3,$5,NULL,yylineno);}
       | IF LP Exp RP Stmt ELSE Stmt   {$$=mknode(IF_THEN_ELSE,$3,$5,$7,yylineno);}
-      | WHILE LP Exp RP Stmt {$$=mknode(WHILE,$3,$5,NULL,yylineno);}
-      | FOR LP Exp SEMI Exp SEMI Exp RP Stmt {$$=mknode(FOR,$5,$7,$9,yylineno)}
+      | WHILE LP Exp RP Stmt {$$=mknode(WHILE,$3,$5,NULL,yylineno);$$->breakFlag=0;}//here 允许break
+      | FOR LP Exp SEMI Exp SEMI Exp RP Stmt {$$=mknode(FOR,$5,$7,$9,yylineno);$$->breakFlag=0;}
       ;
   
 DefList: {$$=NULL; }
@@ -113,7 +115,7 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | LP Exp RP     {$$=$2;}
       | MINUS Exp %prec UMINUS   {$$=mknode(UMINUS,$2,NULL,NULL,yylineno);strcpy($$->type_id,"UMINUS");}
       | NOT Exp       {$$=mknode(NOT,$2,NULL,NULL,yylineno);strcpy($$->type_id,"NOT");}
-      | ID SELF_PLUS  {$$=mknode(SELF_PLUS,NULL,NULL,NULL,yylineno);strcpy($$->type_id,"SELF_PLUS");} //自增
+      | Exp SELFPLUS   {$$=mknode(SELFPLUS,$1,NULL,NULL,yylineno);strcpy($$->type_id,"SELFPLUS");} //自增 here
       | ID LP Args RP {$$=mknode(FUNC_CALL,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
       | ID LP RP      {$$=mknode(FUNC_CALL,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
       | ID            {$$=mknode(ID,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
@@ -121,7 +123,6 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | INT           {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
       | FLOAT         {$$=mknode(FLOAT,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FLOAT;}
       | CHAR          {$$=mknode(CHAR,NULL,NULL,NULL,yylineno);$$->type_char=$1;$$->type=CHAR;}//here
-      | BREAK         {$$=mknode(BREAK,NULL,NULL,NULL,yylineno);}//here
       ;
 Args:    Exp COMMA Args    {$$=mknode(ARGS,$1,$3,NULL,yylineno);}
        | Exp               {$$=mknode(ARGS,$1,NULL,NULL,yylineno);}

@@ -6,14 +6,37 @@ struct node * mknode(int kind,struct node *first,struct node *second, struct nod
   T->ptr[1]=second;
   T->ptr[2]=third;
   T->pos=pos;
+  
+  //breakflag我用综合属性的写法。如果子节点是1，则置1。
+  T->breakFlag = 0 ;
+  for (int i=0;i<3;i++){
+      if(T->ptr[i]){//遍历每一个儿子
+          if(T->ptr[i]->breakFlag) 
+          {
+              T->breakFlag=1;//如果传上来了1，就赋1
+            break;
+          }
+      }
+  }
+//   T->breakCapable=0;
+
   return T;
+
 }
+// void fillBreakCapable(struct node *T){
+//     if(T->ptr[0]) fillBreakCapable(T->ptr[0]);
+//     if(T->ptr[1]) fillBreakCapable(T->ptr[0]);
+//     if(T->ptr[2]) fillBreakCapable(T->ptr[0]);
+//     T->breakCapable = 1;
+
+// }
 
 void display(struct node *T,int indent)  {//traverse the tree 
   int i=1;
   struct node *T0;
   if (T)
 	{
+    // printf("%*c breakFlag  :%d\n",indent,' ',T->breakFlag);
 	switch (T->kind) {
 	case EXT_DEF_LIST:  display(T->ptr[0],indent);    //display first one in the external define list  
                         display(T->ptr[1],indent);    //display others  
@@ -51,7 +74,7 @@ void display(struct node *T,int indent)  {//traverse the tree
                         break;
 	case RETURN:        printf("%*creturn  sentence  :\n",indent,' ');
                         display(T->ptr[0],indent+3);
-                        break;
+                        break;                        
 	case COMP_STM:      printf("%*ccomposite sentence  :\n",indent,' ');
                         printf("%*ccomposite sentence variaty define  :\n",indent+3,' ');
                         display(T->ptr[0],indent+6);      //display define part
@@ -117,20 +140,26 @@ void display(struct node *T,int indent)  {//traverse the tree
                         break;
 	case CHAR:	        printf("%*cCHAR :%s\n",indent,' ',T->type_char);
                         break;
-	case ASSIGNOP:
-    case PLUSASS:
+	case ASSIGNOP:      printf("%*cASSIGNOP\n",indent,' ');
+                        break;
+    case SELFPLUS:     printf("%*cSELFPLUS\n",indent,' ');
+                        break;
+    case PLUSASS:       printf("%*cPLUSASS\n",indent,' ');
+                        break;
     case MINUSASS:
-	case AND:
-	case OR:
-	case RELOP:
-	case PLUS:
-	case MINUS:
-	case STAR:
-	case DIV:
-                    printf("%*c%s\n",indent,' ',T->type_id);
-                    display(T->ptr[0],indent+3);
-                    display(T->ptr[1],indent+3);
-                    break;
+
+        // 下面几个选项共用    
+    case AND:
+    case OR:
+    case RELOP:
+    case PLUS:
+    case MINUS:
+    case STAR:
+    case DIV:
+                        printf("%*c%s\n",indent,' ',T->type_id);
+                        display(T->ptr[0],indent+3);
+                        display(T->ptr[1],indent+3);
+                        break;
 	case NOT:
 	case UMINUS:    printf("%*c%s\n",indent,' ',T->type_id);
                     display(T->ptr[0],indent+3);
@@ -146,10 +175,10 @@ void display(struct node *T,int indent)  {//traverse the tree
                         display(T0,indent+3);
                         T=T->ptr[1];
                         }
-//                    printf("%*c %dth actual para exp  :\n",indent,' ',i);
-  //                  display(T,indent+3);
+                    //printf("%*c %dth actual para exp  :\n",indent,' ',i);
+                    //display(T,indent+3);
                     printf("\n");
                     break;
-         }
-      }
+        }//switch
+    }//if
 }

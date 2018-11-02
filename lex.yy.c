@@ -802,7 +802,7 @@ YY_RULE_SETUP
 case 20:
 YY_RULE_SETUP
 #line 48 "lex.l"
-{return SELF_PLUS;}
+{return SELFPLUS;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP

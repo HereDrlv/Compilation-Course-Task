@@ -45,7 +45,7 @@ char  '[A-Za-z]'
 "="			{return ASSIGNOP;}
 "+="		{return PLUSASS;}
 "-="		{return MINUSASS;}
-"++"    {return SELF_PLUS;}
+"++"    {return SELFPLUS;}
 "+"			{return PLUS;}
 "-"			{return MINUS;}
 "*"			{return STAR;}
