@@ -388,6 +388,7 @@ void Exp(struct node *T)
                     T->ptr[1]->offset=T->offset;
                     Exp(T->ptr[1]);
                     T->type=T->ptr[0]->type;
+                    
                     // here.赋值语句类型不匹配。
                     rtn=searchSymbolTable(T->ptr[0]->type_id);
                     if ( symbolTable.symbols[rtn].type != T->ptr[1]->type){
@@ -406,40 +407,118 @@ void Exp(struct node *T)
                     T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
                     }
                 break;
-    case SELFPLUS://TODO 实验三。填表填code时用
-                printf("exome?exome?exome?exome?exome?exome?exome?exome?");
-                break;
-    case PLUSASS:
+    case PLUSASS://+=
                 if (T->ptr[0]->kind!=ID){
                     semantic_error(T->pos,"", "plus-assigning sentence needs left-value");
                     }//here 复合赋值语句左值检测
                 else {
-                    Exp(T->ptr[0]);   //处理左值, 例中仅为variety 
-                    T->ptr[1]->offset=T->offset;
+                    T->ptr[0]->offset = T->offset;//
+                    Exp(T->ptr[0]);//
+                    T->ptr[1]->offset = T->offset + T->ptr[0]->width;
                     Exp(T->ptr[1]);
-                    T->type=T->ptr[0]->type;
 
-                    //直接生成代码试试。也许只要改下面与code有关的语句就行了
-                    T->width=T->ptr[1]->width;//width我实在不知道怎么改了，可能影响实验四
-                    // 与code有关的语句1:
-                    T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
-                    // 下面全都是准备好op1 result 填代码
-                    opn1.kind=ID;   
-                    strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
-                    opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
-                    opn2.kind=ID;   
-                    strcpy(opn2.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
+                    T->type = T->ptr[0]->type;
+                    rtn = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[1]->width);
+                    // T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[1]->width + getWidth(T->type));
+                    T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[1]->width + 4);
+                    // T->width = T->ptr[1]->width + getWidth(T->type) * 2;
+                    T->width = T->ptr[1]->width + 4 * 2;//
+                    T->code = merge(2, T->ptr[0]->code, T->ptr[1]->code);
+
+                    // strcpy(opn1.id, symbolTable.symbols[T->ptr[0]->place].alias);
+                    // setOpn(&opn1, ID, T->ptr[0]->type, symbolTable.symbols[T->ptr[0]->place].offset);
+                    //setOpn
+                    opn1.kind=ID; strcpy(opn1.id, symbolTable.symbols[T->ptr[0]->place].alias);//右值一定是个variety 或临时variety 
+                    opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+
+                    // strcpy(opn2.id, symbolTable.symbols[T->ptr[1]->place].alias);
+                    // setOpn(&opn2, ID, T->ptr[1]->type, symbolTable.symbols[T->ptr[1]->place].offset);
+                    opn2.kind=ID; strcpy(opn2.id, symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
                     opn2.offset=symbolTable.symbols[T->ptr[1]->place].offset;
 
-                    result.kind=ID; 
-                    strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
-                    result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
-                    T->code=merge(2,T->code,genIR(PLUSASS,opn1,opn2,result));
+                    // strcpy(result.id, symbolTable.symbols[rtn].alias);
+                    // setOpn(&result, ID, T->type, symbolTable.symbols[rtn].offset);
+                    result.kind=ID; strcpy(result.id, symbolTable.symbols[rtn].alias);//右值一定是个variety 或临时variety 
+                    result.offset=symbolTable.symbols[rtn].offset;
+                    T->code = merge(2, T->code, genIR(PLUS, opn1, opn2, result));
+
+
+                    strcpy(opn1.id, symbolTable.symbols[rtn].alias);
+                    opn1.offset = symbolTable.symbols[rtn].offset;
+                    strcpy(result.id, symbolTable.symbols[T->ptr[0]->place].alias);
+                    result.offset = symbolTable.symbols[T->ptr[0]->place].offset;
+                    T->code = merge(2, T->code, genIR(ASSIGNOP, opn1, opn2, result));
 
 
                     
                     }
                 break;
+    case SELFPLUS:
+            //here SELFPLUS实验二静态语义检测
+            if( T->ptr[1] ){//若有两个子树，则为非法
+                semantic_error(T->pos,"", "this exp can't self plus ");
+                // break;
+            }
+            if(T->type == INT || T->type == CHAR || T->type == FLOAT || T->type == BREAK ){
+            //若为INT CHAR FLOAT BREAK，则非法 
+                    semantic_error(T->pos,"", "this exp can't self plus ");
+            }
+
+            //TODO SELFPLUS实验三生成中间代码
+            // T->width=T->ptr[1]->width;//width我实在不知道怎么改了，可能影响实验四
+            // // 与code有关的语句1:
+            // T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
+            // // 下面全都是准备好op1 op1 result 填代码
+            // opn1.kind=ID;   
+            // strcpy(opn1.id,symbolTable.symbols[T->ptr[1]->place].alias);//右值一定是个variety 或临时variety 
+            // opn1.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+            // //这里是生成INT中间代码：
+            // T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset); //为整常量generate 一个临时variety 
+            // T->type=INT;
+            // opn2.kind=INT;opn2.const_int=1;//因为是自增，所以改成1就行了。本来是：// opn1.kind=INT;opn1.const_int=T->type_int;
+            // opn2.offset=symbolTable.symbols[T->ptr[1]->place].offset;
+            
+            // result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
+            // result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+            
+            // T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
+            // // T->width=4;
+            //反正上面左拼右凑糊上来的，可能影响实验4
+            T->ptr[0]->offset = T->offset;//
+            Exp(T->ptr[0]);//
+
+            T->type = T->ptr[0]->type;
+            rtn = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset );
+            // T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[1]->width + getWidth(T->type));
+            T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + 4);
+            // T->width = T->ptr[1]->width + getWidth(T->type) * 2;
+            T->width = T->ptr[0]->width + 4 * 2;//
+            // T->code = T->ptr[0]->code;
+
+            //op1 ID
+            opn1.kind=ID; strcpy(opn1.id, symbolTable.symbols[T->ptr[0]->place].alias);//右值一定是个variety 或临时variety 
+            opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+            //op2 INT
+            T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset); //为整常量generate 一个临时variety 
+            T->type=INT;
+            opn2.kind=INT;opn2.const_int=1;
+            T->width=4;
+            //result ID
+            result.kind=ID; strcpy(result.id, symbolTable.symbols[rtn].alias);//右值一定是个variety 或临时variety 
+            result.offset=symbolTable.symbols[rtn].offset;
+            // T->code = merge(2, T->code, genIR(PLUS, opn1, opn2, result));
+            T->code = genIR(PLUS, opn1, opn2, result);
+
+
+            strcpy(opn1.id, symbolTable.symbols[rtn].alias); 
+            opn1.offset = symbolTable.symbols[rtn].offset;
+            strcpy(result.id, symbolTable.symbols[T->ptr[0]->place].alias);
+            result.offset = symbolTable.symbols[T->ptr[0]->place].offset;
+            T->code = merge(2, T->code, genIR(ASSIGNOP, opn1, opn2, result));
+
+
+            break;
+
     
 	case AND:   //按算术exp 方式计算bool 值, 未写完
 	case OR:    //按算术exp 方式计算bool 值, 未写完
@@ -463,7 +542,7 @@ void Exp(struct node *T)
                 if (T->ptr[0]->type==FLOAT || T->ptr[1]->type==FLOAT)
                      T->type=FLOAT,T->width=T->ptr[0]->width+T->ptr[1]->width+4;
                 else T->type=INT,T->width=T->ptr[0]->width+T->ptr[1]->width+2;
-                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width+T->ptr[1]->width);
+                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width+T->ptr[1]->width);//
                 opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 opn1.type=T->ptr[0]->type;opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 opn2.kind=ID; strcpy(opn2.id,symbolTable.symbols[T->ptr[1]->place].alias);
@@ -685,7 +764,9 @@ void semantic_Analysis(struct node *T)
                                 T0->ptr[0]->ptr[1]->offset=T->offset+T->width+width;
                                 Exp(T0->ptr[0]->ptr[1]);
                                 opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[T0->ptr[0]->ptr[1]->place].alias);
+                                opn1.offset = symbolTable.symbols[T0->ptr[0]->ptr[1]->place].offset;//here bug!!!
                                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T0->ptr[0]->place].alias);
+                                result.offset = symbolTable.symbols[T0->ptr[0]->place].offset;//here bug
                                 T->code=merge(3,T->code,T0->ptr[0]->ptr[1]->code,genIR(ASSIGNOP,opn1,opn2,result));
                                 }
                             T->width+=width+T0->ptr[0]->ptr[1]->width;
@@ -763,19 +844,6 @@ void semantic_Analysis(struct node *T)
     case BREAK: //here 
                 // printf("here!!!!!!!!!!");
                 break;
-	case SELFPLUS:
-                //here SELFPLUS实验三静态语义检测
-                if( ! T->ptr[1] ){//若有两个子树，则为非法
-                    semantic_error(T->pos,"", "this exp can't self plus ");
-                    break;
-                }
-                if(T->type == INT || T->type == CHAR || T->type == FLOAT || T->type == BREAK ){
-                //若为INT CHAR FLOAT BREAK，则非法 
-                        semantic_error(T->pos,"", "this exp can't self plus ");
-                }
-                break;
-
-
 	case RETURN:if (T->ptr[0]){
                     T->ptr[0]->offset=T->offset;
                     Exp(T->ptr[0]);
@@ -802,6 +870,7 @@ void semantic_Analysis(struct node *T)
     case FLOAT:
 	case ASSIGNOP:
     case PLUSASS:
+    case SELFPLUS:
 	case AND:
 	case OR:
 	case RELOP:
